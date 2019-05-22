@@ -8,11 +8,11 @@
     tools:context=".MainActivity">
 
     <ImageView
-        android:id="@+id/imgPhoto"
-        android:layout_width="200dp"
-        android:layout_height="200dp"
+        android:id="@+id/imgProfile"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
         android:layout_gravity="center"
-        android:scaleType="centerInside"
+        android:scaleType="fitCenter"
         android:src="@drawable/imageicon"/>
     <EditText
         android:id="@+id/etName"

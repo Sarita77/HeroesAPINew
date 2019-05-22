@@ -1,6 +1,15 @@
 package com.e.heroesapi;
 
+import android.content.Intent;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.StrictMode;
+import android.provider.MediaStore;
+import android.support.annotation.Nullable;
+import android.support.v4.content.CursorLoader;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
@@ -9,6 +18,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
 import java.util.List;
 
 import heroesapi.HeroesAPI;
@@ -25,13 +35,14 @@ public class MainActivity extends AppCompatActivity {
     private EditText etName, etDesc;
     private Button btnSave;
     private TextView tvData;
+    private String imagePath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        imgPhoto = findViewById(R.id.imgPhoto);
+        imgPhoto = findViewById(R.id.imgProfile);
         etName = findViewById(R.id.etName);
         etDesc = findViewById(R.id.etDesc);
         btnSave = findViewById(R.id.btnSave);
@@ -40,11 +51,21 @@ public class MainActivity extends AppCompatActivity {
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 Save();
+
+            }
+        });
+
+        imgPhoto.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                BrowseImage();
             }
         });
     }
 
+    //  1st. Save image
     private void Save() {
         String name = etName.getText().toString();
         String desc = etDesc.getText().toString();
@@ -59,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
         Call<Void> heroesCall = heroesAPI.addhero(name, desc);
 
 
-       // for getting list of heroes added
+        // for getting list of heroes added
         Call<List<Heroes>> listCall = heroesAPI.getHeroes();
 
         // Adding heroes
@@ -106,4 +127,58 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
+    
+//  2nd. Browse Image
+    private void BrowseImage() {
+        Intent intent = new Intent(Intent.ACTION_PICK);
+        intent.setType("image/*");
+        startActivityForResult(intent, 0);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if(resultCode == RESULT_OK){
+            if(data == null){
+                Toast.makeText(this, "Please select an image", Toast.LENGTH_SHORT).show();
+            }
+        }
+        Uri uri = data.getData();
+        imagePath = getRealPathFromUri(uri);
+        previewImage(imagePath);
+
+    }
+
+    private String getRealPathFromUri(Uri uri) {
+        String[] projection = {MediaStore.Images.Media.DATA};
+        CursorLoader loader = new CursorLoader(getApplicationContext(), uri, projection, null, 
+                null, null);
+        Cursor cursor = loader.loadInBackground();
+        int colIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+        cursor.moveToFirst();
+        String result = cursor.getString(colIndex);
+        cursor.close();
+        return result;
+        
+    }
+
+    private void previewImage(String imagePath){
+        File imgFile = new File(imagePath);
+        if(imgFile.exists()){
+            Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+            imgPhoto.setImageBitmap(myBitmap);
+        }
+    }
+
+    private void StrictMode(){
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
+    }
+
+    private void SaveImageOnly(){
+        File file = new File(imagePath);
+    }
+
+
 }
