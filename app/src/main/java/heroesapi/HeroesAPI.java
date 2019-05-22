@@ -3,6 +3,7 @@ package heroesapi;
 import java.util.List;
 
 import model.Heroes;
+import model.ImageResponse;
 import okhttp3.MultipartBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -29,7 +30,7 @@ public interface HeroesAPI {
     // For uploading image
     @Multipart
     @POST("upload")
-//    Call<ImageResponse> uploadImage(@Part MultipartBody.Part img);
+    Call<ImageResponse> uploadImage(@Part MultipartBody.Part img);
 
     @GET("heroes")
     Call<List<Heroes>> getAllHeroes();

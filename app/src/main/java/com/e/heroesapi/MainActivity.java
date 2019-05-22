@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.StrictMode;
@@ -19,10 +20,17 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import heroesapi.HeroesAPI;
 import model.Heroes;
+import model.ImageResponse;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -36,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
     private Button btnSave;
     private TextView tvData;
     private String imagePath;
+    private String imageName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +83,13 @@ public class MainActivity extends AppCompatActivity {
                 .baseUrl(Url.BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
+
+        //for uploading image
+        Map<String , String > map = new HashMap<>();
+        map.put("name", name);
+        map.put("desc", desc);
+        map.put("image", imageName);
+
 
         HeroesAPI heroesAPI = retrofit.create(HeroesAPI.class);
         // for adding heroes
@@ -178,6 +194,25 @@ public class MainActivity extends AppCompatActivity {
 
     private void SaveImageOnly(){
         File file = new File(imagePath);
+
+        RequestBody requestBody = RequestBody.create(MediaType.parse("multipart/form-data"), file);
+        MultipartBody.Part body = MultipartBody.Part.createFormData("imageFile", file.getName(), requestBody);
+
+        HeroesAPI heroesAPI = Url.getInstance().create(HeroesAPI.class);
+        Call<ImageResponse> responseBodyCall = heroesAPI.uploadImage(body);
+
+        StrictMode();
+
+        // Thi is synchronized method not asynchronous
+        try {
+            Response<ImageResponse> imageResponseResponse = responseBodyCall.execute();
+//            After saving an image, retrieve the current name of the image
+            imageName = imageResponseResponse.body().getFilename();
+        } catch (IOException e){
+            Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
+
     }
 
 
